@@ -1,0 +1,42 @@
+name: Android Build
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1️⃣ Checkout your code
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2️⃣ Set up JDK 17 (required for Gradle 8.x + Kotlin 1.9)
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3
+        with:
+          distribution: temurin
+          java-version: 17
+
+      # 3️⃣ Install Gradle 8.3 (without storing it in your repo)
+      - name: Set up Gradle
+        uses: gradle/gradle-build-action@v2
+        with:
+          gradle-version: 8.3
+
+      # 4️⃣ Build the debug APK
+      - name: Build Debug APK
+        run: ./gradlew assembleDebug
+
+      # 5️⃣ Upload the APK as an artifact
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Mookplayer-debug-apk
+          path: app/build/outputs/apk/debug/app-debug.apk
