@@ -12,9 +12,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    env:
-      JAVA_HOME_17_X64: /usr/lib/jvm/adoptopenjdk-17-hotspot-amd64
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -24,9 +21,6 @@ jobs:
         with:
           distribution: temurin
           java-version: 17
-
-      - name: Grant execute permission for gradle wrapper (optional)
-        run: chmod +x gradlew || true
 
       - name: Build Debug APK using Gradle
         uses: gradle/gradle-build-action@v2
