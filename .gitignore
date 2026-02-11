@@ -1,7 +1,4 @@
-# Ignore Gradle wrapper distribution
 gradle/gradle-8.3-bin.zip
 gradle/gradle-8.3/lib/
-
-# Ignore build outputs
-/build/
+.build/
 .gradle/
