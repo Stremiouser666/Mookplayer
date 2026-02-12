@@ -11,11 +11,11 @@ import com.mookplayer.com.databinding.ActivityMainBinding
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
-    private var player: ExoPlayer? = null
+    private lateinit var player: ExoPlayer
 
-    private val filePicker =
-        registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri: Uri? ->
-            uri?.let { playMedia(it) }
+    private val openVideo =
+        registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+            uri?.let { playVideo(it) }
         }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -24,28 +24,23 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        initializePlayer()
+        player = ExoPlayer.Builder(this).build()
+        binding.playerView.player = player
 
         binding.selectFileButton.setOnClickListener {
-            filePicker.launch(arrayOf("video/*", "audio/*"))
+            openVideo.launch("video/*")
         }
     }
 
-    private fun initializePlayer() {
-        player = ExoPlayer.Builder(this).build()
-        binding.playerView.player = player
-    }
-
-    private fun playMedia(uri: Uri) {
+    private fun playVideo(uri: Uri) {
         val mediaItem = MediaItem.fromUri(uri)
-        player?.setMediaItem(mediaItem)
-        player?.prepare()
-        player?.playWhenReady = true
+        player.setMediaItem(mediaItem)
+        player.prepare()
+        player.play()
     }
 
-    override fun onStop() {
-        super.onStop()
-        player?.release()
-        player = null
+    override fun onDestroy() {
+        super.onDestroy()
+        player.release()
     }
 }
