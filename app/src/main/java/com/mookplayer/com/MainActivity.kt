@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.view.KeyEvent
 import android.view.View
 import android.widget.Button
 import androidx.activity.result.contract.ActivityResultContracts
@@ -19,6 +20,8 @@ class MainActivity : AppCompatActivity() {
     private lateinit var playerView: PlayerView
     private lateinit var chooseButton: Button
 
+    private var currentUri: Uri? = null
+
     private val prefs by lazy {
         getSharedPreferences("mookplayer_prefs", Context.MODE_PRIVATE)
     }
@@ -28,7 +31,6 @@ class MainActivity : AppCompatActivity() {
             if (result.resultCode == Activity.RESULT_OK) {
                 val uri: Uri? = result.data?.data
                 uri?.let {
-                    // Persist permission so we can reopen later
                     contentResolver.takePersistableUriPermission(
                         it,
                         Intent.FLAG_GRANT_READ_URI_PERMISSION
@@ -50,7 +52,6 @@ class MainActivity : AppCompatActivity() {
         player = ExoPlayer.Builder(this).build()
         playerView.player = player
 
-        // 🔥 TV auto-focus
         chooseButton.isFocusable = true
         chooseButton.isFocusableInTouchMode = true
         chooseButton.requestFocus()
@@ -59,7 +60,6 @@ class MainActivity : AppCompatActivity() {
             openFileChooser()
         }
 
-        // 🔥 Auto-resume last video if exists
         loadLastVideo()?.let {
             playVideo(it)
         }
@@ -76,12 +76,19 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun playVideo(uri: Uri) {
+        currentUri = uri
+
         val mediaItem = MediaItem.fromUri(uri)
         player.setMediaItem(mediaItem)
         player.prepare()
+
+        val savedPosition = prefs.getLong(uri.toString(), 0L)
+        if (savedPosition > 0) {
+            player.seekTo(savedPosition)
+        }
+
         player.play()
 
-        // 🔥 Auto-hide button once video starts
         chooseButton.visibility = View.GONE
     }
 
@@ -94,13 +101,43 @@ class MainActivity : AppCompatActivity() {
         return uriString?.let { Uri.parse(it) }
     }
 
+    // 🔥 TV behaviour: Pause + Show Overlay
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        if (event.action == KeyEvent.ACTION_DOWN &&
+            event.keyCode == KeyEvent.KEYCODE_DPAD_CENTER
+        ) {
+
+            if (player.isPlaying) {
+                // Pause playback
+                player.pause()
+
+                // Show overlay button
+                chooseButton.visibility = View.VISIBLE
+                chooseButton.requestFocus()
+
+                return true
+            }
+        }
+
+        return super.dispatchKeyEvent(event)
+    }
+
     override fun onStop() {
         super.onStop()
+        savePlaybackPosition()
         player.pause()
     }
 
     override fun onDestroy() {
-        super.onDestroy()
+        savePlaybackPosition()
         player.release()
+        super.onDestroy()
+    }
+
+    private fun savePlaybackPosition() {
+        currentUri?.let {
+            val position = player.currentPosition
+            prefs.edit().putLong(it.toString(), position).apply()
+        }
     }
 }
