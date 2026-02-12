@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/rootLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -10,7 +11,7 @@
         android:id="@+id/playerView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:useController="false" />
+        app:useController="false" />
 
     <!-- Dim background -->
     <View
@@ -31,7 +32,6 @@
         android:padding="24dp"
         android:visibility="gone">
 
-        <!-- PAUSED -->
         <TextView
             android:id="@+id/pausedLabel"
             android:layout_width="wrap_content"
@@ -41,7 +41,6 @@
             android:textColor="@android:color/white"
             android:textStyle="bold" />
 
-        <!-- Filename -->
         <TextView
             android:id="@+id/fileNameText"
             android:layout_width="wrap_content"
@@ -51,7 +50,6 @@
             android:textColor="@android:color/white"
             android:layout_marginTop="8dp" />
 
-        <!-- Time Row -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -78,7 +76,6 @@
                 android:textColor="@android:color/white" />
         </LinearLayout>
 
-        <!-- Progress -->
         <ProgressBar
             android:id="@+id/progressBar"
             style="?android:attr/progressBarStyleHorizontal"
@@ -87,7 +84,6 @@
             android:max="1000"
             android:layout_marginTop="6dp" />
 
-        <!-- Buttons -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
