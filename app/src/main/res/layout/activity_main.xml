@@ -10,11 +10,10 @@
         android:layout_height="match_parent"
         android:keepScreenOn="true"
         app:use_controller="true"
-        app:resize_mode="fit"
-        app:controller_auto_show="true" />
+        app:resize_mode="fit" />
 
     <Button
-        android:id="@+id/fileChooserButton"
+        android:id="@+id/chooseButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Choose Video"
