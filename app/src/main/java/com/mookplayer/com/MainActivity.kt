@@ -1,56 +1,72 @@
 package com.mookplayer.com
 
+import android.app.Activity
+import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.widget.Button
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.media3.common.MediaItem
 import androidx.media3.exoplayer.ExoPlayer
-import com.mookplayer.com.databinding.ActivityMainBinding
+import androidx.media3.ui.PlayerView
 
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var binding: ActivityMainBinding
-    private var player: ExoPlayer? = null
-    private var playbackPosition: Long = 0
-    private var playWhenReady: Boolean = true
+    private lateinit var playerView: PlayerView
+    private lateinit var player: ExoPlayer
+    private lateinit var fileChooserButton: Button
+
+    // Launcher for picking a video
+    private val pickVideoLauncher = registerForActivityResult(
+        ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            val uri: Uri? = result.data?.data
+            uri?.let { playVideo(it) }
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityMainBinding.inflate(layoutInflater)
-        setContentView(binding.root)
-    }
+        setContentView(R.layout.activity_main)
 
-    private fun initializePlayer() {
-        player = ExoPlayer.Builder(this).build().also { exoPlayer ->
-            binding.playerView.player = exoPlayer
+        playerView = findViewById(R.id.playerView)
+        fileChooserButton = findViewById(R.id.fileChooserButton)
 
-            // 🔹 Sample video
-            val videoUrl = "https://storage.googleapis.com/exoplayer-test-media-0/BigBuckBunny_320x180.mp4"
+        player = ExoPlayer.Builder(this).build()
+        playerView.player = player
 
-            val mediaItem = MediaItem.fromUri(Uri.parse(videoUrl))
-            exoPlayer.setMediaItem(mediaItem)
-            exoPlayer.playWhenReady = playWhenReady
-            exoPlayer.seekTo(playbackPosition)
-            exoPlayer.prepare()
+        // Example test URL
+        val testUrl = "https://www.example.com/test.mp4"
+        playVideo(Uri.parse(testUrl))
+
+        fileChooserButton.setOnClickListener {
+            openFileChooser()
         }
     }
 
-    private fun releasePlayer() {
-        player?.let { exoPlayer ->
-            playbackPosition = exoPlayer.currentPosition
-            playWhenReady = exoPlayer.playWhenReady
-            exoPlayer.release()
-        }
-        player = null
+    private fun playVideo(uri: Uri) {
+        player.setMediaItem(MediaItem.fromUri(uri))
+        player.prepare()
+        player.play()
     }
 
-    override fun onStart() {
-        super.onStart()
-        initializePlayer()
+    private fun openFileChooser() {
+        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
+            addCategory(Intent.CATEGORY_OPENABLE)
+            type = "video/*"
+        }
+        pickVideoLauncher.launch(intent)
     }
 
     override fun onStop() {
         super.onStop()
-        releasePlayer()
+        player.pause()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        player.release()
     }
 }
