@@ -13,43 +13,31 @@ import androidx.media3.ui.PlayerView
 
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var playerView: PlayerView
     private lateinit var player: ExoPlayer
-    private lateinit var fileChooserButton: Button
+    private lateinit var playerView: PlayerView
+    private lateinit var chooseButton: Button
 
-    // Launcher for picking a video
-    private val pickVideoLauncher = registerForActivityResult(
-        ActivityResultContracts.StartActivityForResult()
-    ) { result ->
-        if (result.resultCode == Activity.RESULT_OK) {
-            val uri: Uri? = result.data?.data
-            uri?.let { playVideo(it) }
+    private val pickVideo =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+            if (result.resultCode == Activity.RESULT_OK) {
+                val uri: Uri? = result.data?.data
+                uri?.let { playVideo(it) }
+            }
         }
-    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
         playerView = findViewById(R.id.playerView)
-        fileChooserButton = findViewById(R.id.fileChooserButton)
+        chooseButton = findViewById(R.id.chooseButton)
 
         player = ExoPlayer.Builder(this).build()
         playerView.player = player
 
-        // Example test URL
-        val testUrl = "https://www.example.com/test.mp4"
-        playVideo(Uri.parse(testUrl))
-
-        fileChooserButton.setOnClickListener {
+        chooseButton.setOnClickListener {
             openFileChooser()
         }
-    }
-
-    private fun playVideo(uri: Uri) {
-        player.setMediaItem(MediaItem.fromUri(uri))
-        player.prepare()
-        player.play()
     }
 
     private fun openFileChooser() {
@@ -57,7 +45,14 @@ class MainActivity : AppCompatActivity() {
             addCategory(Intent.CATEGORY_OPENABLE)
             type = "video/*"
         }
-        pickVideoLauncher.launch(intent)
+        pickVideo.launch(intent)
+    }
+
+    private fun playVideo(uri: Uri) {
+        val mediaItem = MediaItem.fromUri(uri)
+        player.setMediaItem(mediaItem)
+        player.prepare()
+        player.play()
     }
 
     override fun onStop() {
