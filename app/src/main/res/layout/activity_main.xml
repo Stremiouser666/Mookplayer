@@ -4,19 +4,57 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
+    <!-- Video -->
     <androidx.media3.ui.PlayerView
         android:id="@+id/playerView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:keepScreenOn="true"
-        app:use_controller="true"
+        app:use_controller="false"
         app:resize_mode="fit" />
 
-    <Button
-        android:id="@+id/chooseButton"
+    <!-- Dim background -->
+    <View
+        android:id="@+id/dimOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#88000000"
+        android:visibility="gone" />
+
+    <!-- Overlay Container -->
+    <LinearLayout
+        android:id="@+id/overlayContainer"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Choose Video"
-        android:layout_margin="16dp"
-        android:layout_gravity="top|center_horizontal"/>
+        android:orientation="vertical"
+        android:gravity="center"
+        android:layout_gravity="center"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/pausedText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="PAUSED"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"
+            android:layout_marginBottom="16dp" />
+
+        <TextView
+            android:id="@+id/fileNameText"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="#FFFFFF"
+            android:textSize="16sp"
+            android:layout_marginBottom="20dp" />
+
+        <Button
+            android:id="@+id/chooseButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Choose Video" />
+
+    </LinearLayout>
+
 </FrameLayout>
