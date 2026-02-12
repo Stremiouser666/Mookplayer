@@ -8,6 +8,8 @@ import android.os.Bundle
 import android.view.KeyEvent
 import android.view.View
 import android.widget.Button
+import android.widget.LinearLayout
+import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.media3.common.MediaItem
@@ -19,6 +21,10 @@ class MainActivity : AppCompatActivity() {
     private lateinit var player: ExoPlayer
     private lateinit var playerView: PlayerView
     private lateinit var chooseButton: Button
+    private lateinit var overlayContainer: LinearLayout
+    private lateinit var pausedText: TextView
+    private lateinit var fileNameText: TextView
+    private lateinit var dimOverlay: View
 
     private var currentUri: Uri? = null
 
@@ -48,13 +54,13 @@ class MainActivity : AppCompatActivity() {
 
         playerView = findViewById(R.id.playerView)
         chooseButton = findViewById(R.id.chooseButton)
+        overlayContainer = findViewById(R.id.overlayContainer)
+        pausedText = findViewById(R.id.pausedText)
+        fileNameText = findViewById(R.id.fileNameText)
+        dimOverlay = findViewById(R.id.dimOverlay)
 
         player = ExoPlayer.Builder(this).build()
         playerView.player = player
-
-        chooseButton.isFocusable = true
-        chooseButton.isFocusableInTouchMode = true
-        chooseButton.requestFocus()
 
         chooseButton.setOnClickListener {
             openFileChooser()
@@ -62,7 +68,7 @@ class MainActivity : AppCompatActivity() {
 
         loadLastVideo()?.let {
             playVideo(it)
-        }
+        } ?: showOverlay()
     }
 
     private fun openFileChooser() {
@@ -89,7 +95,38 @@ class MainActivity : AppCompatActivity() {
 
         player.play()
 
-        chooseButton.visibility = View.GONE
+        fileNameText.text = getFileName(uri)
+
+        hideOverlay()
+    }
+
+    private fun showOverlay() {
+        overlayContainer.visibility = View.VISIBLE
+        dimOverlay.visibility = View.VISIBLE
+        chooseButton.requestFocus()
+    }
+
+    private fun hideOverlay() {
+        overlayContainer.visibility = View.GONE
+        dimOverlay.visibility = View.GONE
+    }
+
+    private fun getFileName(uri: Uri): String {
+        return uri.lastPathSegment ?: "Selected Video"
+    }
+
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        if (event.action == KeyEvent.ACTION_DOWN &&
+            event.keyCode == KeyEvent.KEYCODE_DPAD_CENTER
+        ) {
+
+            if (player.isPlaying) {
+                player.pause()
+                showOverlay()
+                return true
+            }
+        }
+        return super.dispatchKeyEvent(event)
     }
 
     private fun saveLastVideo(uri: Uri) {
@@ -99,27 +136,6 @@ class MainActivity : AppCompatActivity() {
     private fun loadLastVideo(): Uri? {
         val uriString = prefs.getString("last_video_uri", null)
         return uriString?.let { Uri.parse(it) }
-    }
-
-    // 🔥 TV behaviour: Pause + Show Overlay
-    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
-        if (event.action == KeyEvent.ACTION_DOWN &&
-            event.keyCode == KeyEvent.KEYCODE_DPAD_CENTER
-        ) {
-
-            if (player.isPlaying) {
-                // Pause playback
-                player.pause()
-
-                // Show overlay button
-                chooseButton.visibility = View.VISIBLE
-                chooseButton.requestFocus()
-
-                return true
-            }
-        }
-
-        return super.dispatchKeyEvent(event)
     }
 
     override fun onStop() {
