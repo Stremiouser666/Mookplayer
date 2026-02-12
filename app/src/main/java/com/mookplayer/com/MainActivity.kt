@@ -1,9 +1,11 @@
 package com.mookplayer.com
 
 import android.app.Activity
+import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.view.View
 import android.widget.Button
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -17,11 +19,24 @@ class MainActivity : AppCompatActivity() {
     private lateinit var playerView: PlayerView
     private lateinit var chooseButton: Button
 
+    private val prefs by lazy {
+        getSharedPreferences("mookplayer_prefs", Context.MODE_PRIVATE)
+    }
+
     private val pickVideo =
         registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
             if (result.resultCode == Activity.RESULT_OK) {
                 val uri: Uri? = result.data?.data
-                uri?.let { playVideo(it) }
+                uri?.let {
+                    // Persist permission so we can reopen later
+                    contentResolver.takePersistableUriPermission(
+                        it,
+                        Intent.FLAG_GRANT_READ_URI_PERMISSION
+                    )
+
+                    saveLastVideo(it)
+                    playVideo(it)
+                }
             }
         }
 
@@ -35,8 +50,18 @@ class MainActivity : AppCompatActivity() {
         player = ExoPlayer.Builder(this).build()
         playerView.player = player
 
+        // 🔥 TV auto-focus
+        chooseButton.isFocusable = true
+        chooseButton.isFocusableInTouchMode = true
+        chooseButton.requestFocus()
+
         chooseButton.setOnClickListener {
             openFileChooser()
+        }
+
+        // 🔥 Auto-resume last video if exists
+        loadLastVideo()?.let {
+            playVideo(it)
         }
     }
 
@@ -44,6 +69,8 @@ class MainActivity : AppCompatActivity() {
         val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
             addCategory(Intent.CATEGORY_OPENABLE)
             type = "video/*"
+            flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or
+                    Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION
         }
         pickVideo.launch(intent)
     }
@@ -53,6 +80,18 @@ class MainActivity : AppCompatActivity() {
         player.setMediaItem(mediaItem)
         player.prepare()
         player.play()
+
+        // 🔥 Auto-hide button once video starts
+        chooseButton.visibility = View.GONE
+    }
+
+    private fun saveLastVideo(uri: Uri) {
+        prefs.edit().putString("last_video_uri", uri.toString()).apply()
+    }
+
+    private fun loadLastVideo(): Uri? {
+        val uriString = prefs.getString("last_video_uri", null)
+        return uriString?.let { Uri.parse(it) }
     }
 
     override fun onStop() {
