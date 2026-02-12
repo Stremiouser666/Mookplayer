@@ -30,6 +30,16 @@ class MainActivity : AppCompatActivity() {
         binding.selectFileButton.setOnClickListener {
             openVideo.launch("video/*")
         }
+
+        binding.btnPlayPause.setOnClickListener {
+            if (player.isPlaying) {
+                player.pause()
+                binding.btnPlayPause.text = "Play"
+            } else {
+                player.play()
+                binding.btnPlayPause.text = "Pause"
+            }
+        }
     }
 
     private fun playVideo(uri: Uri) {
@@ -37,6 +47,7 @@ class MainActivity : AppCompatActivity() {
         player.setMediaItem(mediaItem)
         player.prepare()
         player.play()
+        binding.btnPlayPause.text = "Pause"
     }
 
     override fun onDestroy() {
