@@ -1,59 +1,120 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/rootLayout"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="@android:color/black">
 
     <!-- Video -->
     <androidx.media3.ui.PlayerView
         android:id="@+id/playerView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:keepScreenOn="true"
-        app:use_controller="false"
-        app:resize_mode="fit" />
+        android:useController="false" />
 
     <!-- Dim background -->
     <View
-        android:id="@+id/dimOverlay"
+        android:id="@+id/dimView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:background="#88000000"
         android:visibility="gone" />
 
-    <!-- Overlay Container -->
+    <!-- Overlay Panel -->
     <LinearLayout
-        android:id="@+id/overlayContainer"
-        android:layout_width="wrap_content"
+        android:id="@+id/overlayLayout"
+        android:layout_width="600dp"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:gravity="center"
         android:layout_gravity="center"
+        android:orientation="vertical"
+        android:background="#DD222222"
+        android:padding="24dp"
         android:visibility="gone">
 
+        <!-- PAUSED -->
         <TextView
-            android:id="@+id/pausedText"
+            android:id="@+id/pausedLabel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="PAUSED"
-            android:textSize="24sp"
-            android:textStyle="bold"
-            android:textColor="#FFFFFF"
-            android:layout_marginBottom="16dp" />
+            android:textSize="22sp"
+            android:textColor="@android:color/white"
+            android:textStyle="bold" />
 
+        <!-- Filename -->
         <TextView
             android:id="@+id/fileNameText"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textColor="#FFFFFF"
-            android:textSize="16sp"
-            android:layout_marginBottom="20dp" />
+            android:text="filename.mp4"
+            android:textSize="18sp"
+            android:textColor="@android:color/white"
+            android:layout_marginTop="8dp" />
 
-        <Button
-            android:id="@+id/chooseButton"
-            android:layout_width="wrap_content"
+        <!-- Time Row -->
+        <LinearLayout
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Choose Video" />
+            android:orientation="horizontal"
+            android:layout_marginTop="16dp">
+
+            <TextView
+                android:id="@+id/timePlayed"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="00:00"
+                android:textColor="@android:color/white" />
+
+            <Space
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1" />
+
+            <TextView
+                android:id="@+id/timeRemaining"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="-00:00"
+                android:textColor="@android:color/white" />
+        </LinearLayout>
+
+        <!-- Progress -->
+        <ProgressBar
+            android:id="@+id/progressBar"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="8dp"
+            android:max="1000"
+            android:layout_marginTop="6dp" />
+
+        <!-- Buttons -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:layout_marginTop="20dp">
+
+            <Button
+                android:id="@+id/resumeButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Resume" />
+
+            <Button
+                android:id="@+id/restartButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Restart"
+                android:layout_marginStart="16dp" />
+
+            <Button
+                android:id="@+id/stopButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Stop"
+                android:layout_marginStart="16dp" />
+        </LinearLayout>
 
     </LinearLayout>
 
