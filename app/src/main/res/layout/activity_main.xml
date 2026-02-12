@@ -1,125 +1,105 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/rootLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <!-- Media3 Player -->
+    <!-- ExoPlayer view -->
     <androidx.media3.ui.PlayerView
         android:id="@+id/playerView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:keepScreenOn="true"
-        app:show_buffering="when_playing"
-        app:show_shuffle_button="false"
-        app:show_timeout="2000" />
+        app:controllerShowTimeoutMs="0"
+        app:controllerHideOnTouch="false"
+        app:showBuffering="never"
+        app:useController="false"
+        app:resize_mode="fit" />
 
-    <!-- Overlay -->
-    <FrameLayout
+    <!-- Overlay layout -->
+    <LinearLayout
         android:id="@+id/overlayLayout"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:background="#66000000" <!-- subtle dim background -->
+        android:visibility="gone"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="#80000000" <!-- semi-transparent dim -->
-        android:visibility="gone">
+        android:padding="16dp">
 
-        <LinearLayout
-            android:orientation="vertical"
+        <TextView
+            android:id="@+id/pausedLabel"
+            android:text="Paused"
+            android:textColor="#FFFFFF"
+            android:textSize="24sp"
+            android:visibility="gone"
+            android:layout_gravity="center" />
+
+        <TextView
+            android:id="@+id/filenameLabel"
+            android:text="No file selected"
+            android:textColor="#FFFFFF"
+            android:textSize="18sp"
+            android:layout_marginTop="8dp"
+            android:layout_gravity="center" />
+
+        <SeekBar
+            android:id="@+id/progressBar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:gravity="center_horizontal"
-            android:padding="24dp">
+            android:layout_marginTop="16dp"
+            android:progress="0" />
 
-            <!-- Paused indicator -->
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:weightSum="2">
+
             <TextView
-                android:id="@+id/pausedLabel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="PAUSED"
-                android:textColor="#FFFFFF"
-                android:textSize="24sp"
-                android:visibility="gone" />
+                android:id="@+id/timePlayed"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:text="0:00"
+                android:textColor="#FFFFFF" />
 
-            <!-- Filename -->
             <TextView
-                android:id="@+id/filenameLabel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Filename.mp4"
-                android:textColor="#FFFFFF"
-                android:textSize="18sp"
-                android:layout_marginTop="8dp" />
-
-            <!-- Progress bar with times -->
-            <LinearLayout
-                android:orientation="horizontal"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:gravity="center_vertical">
-
-                <TextView
-                    android:id="@+id/timePlayed"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="0:00"
-                    android:textColor="#FFFFFF"
-                    android:layout_marginEnd="8dp" />
-
-                <SeekBar
-                    android:id="@+id/progressBar"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:progress="0"
-                    android:max="100" />
-
-                <TextView
-                    android:id="@+id/timeRemaining"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="0:00"
-                    android:textColor="#FFFFFF"
-                    android:layout_marginStart="8dp" />
-            </LinearLayout>
-
-            <!-- Choose file button -->
-            <Button
-                android:id="@+id/selectFileButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Choose File"
-                android:layout_marginTop="16dp" />
-
-            <!-- Controls -->
-            <LinearLayout
-                android:orientation="horizontal"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:gravity="center_horizontal">
-
-                <Button
-                    android:id="@+id/btnStop"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Stop"
-                    android:layout_marginEnd="8dp" />
-
-                <Button
-                    android:id="@+id/btnResume"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Resume"
-                    android:layout_marginEnd="8dp" />
-
-                <Button
-                    android:id="@+id/btnRestart"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Restart" />
-            </LinearLayout>
+                android:id="@+id/timeRemaining"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:gravity="end"
+                android:text="0:00"
+                android:textColor="#FFFFFF" />
         </LinearLayout>
-    </FrameLayout>
+
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:layout_marginTop="16dp">
+
+            <Button
+                android:id="@+id/btnStop"
+                android:text="Stop" />
+
+            <Button
+                android:id="@+id/btnResume"
+                android:text="Resume"
+                android:layout_marginStart="8dp"
+                android:layout_marginEnd="8dp" />
+
+            <Button
+                android:id="@+id/btnRestart"
+                android:text="Restart" />
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/selectFileButton"
+            android:text="Choose File"
+            android:layout_marginTop="16dp"
+            android:layout_gravity="center" />
+    </LinearLayout>
+
 </FrameLayout>
