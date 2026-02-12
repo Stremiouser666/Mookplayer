@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
-    <!-- ExoPlayer view -->
+    <!-- Media3 Player -->
     <androidx.media3.ui.PlayerView
         android:id="@+id/playerView"
         android:layout_width="match_parent"
@@ -16,12 +16,12 @@
         app:useController="false"
         app:resize_mode="fit" />
 
-    <!-- Overlay layout -->
+    <!-- Overlay -->
     <LinearLayout
         android:id="@+id/overlayLayout"
         android:orientation="vertical"
         android:gravity="center"
-        android:background="#66000000" <!-- subtle dim background -->
+        android:background="#66000000"
         android:visibility="gone"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -50,6 +50,7 @@
             android:layout_marginTop="16dp"
             android:progress="0" />
 
+        <!-- Time Labels -->
         <LinearLayout
             android:orientation="horizontal"
             android:layout_width="match_parent"
@@ -73,6 +74,7 @@
                 android:textColor="#FFFFFF" />
         </LinearLayout>
 
+        <!-- Buttons -->
         <LinearLayout
             android:orientation="horizontal"
             android:layout_width="match_parent"
@@ -95,11 +97,13 @@
                 android:text="Restart" />
         </LinearLayout>
 
+        <!-- File chooser -->
         <Button
             android:id="@+id/selectFileButton"
             android:text="Choose File"
             android:layout_marginTop="16dp"
             android:layout_gravity="center" />
+
     </LinearLayout>
 
 </FrameLayout>
