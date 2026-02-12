@@ -1,7 +1,6 @@
 package com.mookplayer.com
 
 import android.app.Activity
-import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
@@ -13,44 +12,37 @@ import android.widget.*
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.media3.common.MediaItem
+import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
-import java.io.File
 import java.util.concurrent.TimeUnit
 
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var player: ExoPlayer
     private lateinit var playerView: PlayerView
-
-    private lateinit var overlayLayout: LinearLayout
-    private lateinit var dimView: View
-    private lateinit var fileNameText: TextView
+    private lateinit var player: ExoPlayer
+    private lateinit var overlayLayout: View
+    private lateinit var pausedLabel: TextView
+    private lateinit var filenameLabel: TextView
+    private lateinit var progressBar: SeekBar
     private lateinit var timePlayed: TextView
     private lateinit var timeRemaining: TextView
-    private lateinit var progressBar: ProgressBar
-    private lateinit var resumeButton: Button
-    private lateinit var restartButton: Button
-    private lateinit var stopButton: Button
+    private lateinit var btnStop: Button
+    private lateinit var btnResume: Button
+    private lateinit var btnRestart: Button
+    private lateinit var selectFileButton: Button
 
-    private var currentUri: Uri? = null
     private val handler = Handler(Looper.getMainLooper())
+    private var updateProgressTask: Runnable? = null
 
-    private val prefs by lazy {
-        getSharedPreferences("mookplayer_prefs", Context.MODE_PRIVATE)
-    }
+    private var currentFileName: String = "No file selected"
 
-    private val pickVideo =
-        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
-            if (result.resultCode == Activity.RESULT_OK) {
-                result.data?.data?.let {
-                    contentResolver.takePersistableUriPermission(
-                        it,
-                        Intent.FLAG_GRANT_READ_URI_PERMISSION
-                    )
-                    saveLastVideo(it)
-                    playVideo(it)
-                }
+    private val pickFileLauncher =
+        registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+            uri?.let {
+                currentFileName = getFileName(uri)
+                filenameLabel.text = currentFileName
+                playUri(uri)
             }
         }
 
@@ -60,126 +52,113 @@ class MainActivity : AppCompatActivity() {
 
         playerView = findViewById(R.id.playerView)
         overlayLayout = findViewById(R.id.overlayLayout)
-        dimView = findViewById(R.id.dimView)
-        fileNameText = findViewById(R.id.fileNameText)
+        pausedLabel = findViewById(R.id.pausedLabel)
+        filenameLabel = findViewById(R.id.filenameLabel)
+        progressBar = findViewById(R.id.progressBar)
         timePlayed = findViewById(R.id.timePlayed)
         timeRemaining = findViewById(R.id.timeRemaining)
-        progressBar = findViewById(R.id.progressBar)
-        resumeButton = findViewById(R.id.resumeButton)
-        restartButton = findViewById(R.id.restartButton)
-        stopButton = findViewById(R.id.stopButton)
+        btnStop = findViewById(R.id.btnStop)
+        btnResume = findViewById(R.id.btnResume)
+        btnRestart = findViewById(R.id.btnRestart)
+        selectFileButton = findViewById(R.id.selectFileButton)
 
+        // Initialize ExoPlayer
         player = ExoPlayer.Builder(this).build()
         playerView.player = player
 
-        resumeButton.setOnClickListener {
-            hideOverlay()
-            player.play()
-        }
-
-        restartButton.setOnClickListener {
-            player.seekTo(0)
-            hideOverlay()
-            player.play()
-        }
-
-        stopButton.setOnClickListener {
-            player.stop()
-            hideOverlay()
-        }
-
-        loadLastVideo()?.let { playVideo(it) }
-    }
-
-    private fun playVideo(uri: Uri) {
-        currentUri = uri
-        val mediaItem = MediaItem.fromUri(uri)
-        player.setMediaItem(mediaItem)
-        player.prepare()
-
-        val savedPosition = prefs.getLong(uri.toString(), 0L)
-        if (savedPosition > 0) player.seekTo(savedPosition)
-
-        player.play()
-    }
-
-    private fun showOverlay() {
-        overlayLayout.visibility = View.VISIBLE
-        dimView.visibility = View.VISIBLE
-        updateOverlay()
-        startProgressUpdates()
-        resumeButton.requestFocus()
-    }
-
-    private fun hideOverlay() {
-        overlayLayout.visibility = View.GONE
-        dimView.visibility = View.GONE
-        handler.removeCallbacksAndMessages(null)
-    }
-
-    private fun updateOverlay() {
-        currentUri?.let {
-            fileNameText.text = File(it.path ?: "").name
-        }
-
-        val duration = player.duration
-        val position = player.currentPosition
-
-        if (duration > 0) {
-            val progress = (position * 1000 / duration).toInt()
-            progressBar.progress = progress
-
-            timePlayed.text = formatTime(position)
-            timeRemaining.text = "-${formatTime(duration - position)}"
-        }
-    }
-
-    private fun startProgressUpdates() {
-        handler.post(object : Runnable {
-            override fun run() {
-                updateOverlay()
-                handler.postDelayed(this, 500)
+        player.addListener(object : Player.Listener {
+            override fun onIsPlayingChanged(isPlaying: Boolean) {
+                pausedLabel.visibility = if (!isPlaying) View.VISIBLE else View.GONE
             }
         })
+
+        btnStop.setOnClickListener { stopPlayer() }
+        btnResume.setOnClickListener { resumePlayer() }
+        btnRestart.setOnClickListener { restartPlayer() }
+        selectFileButton.setOnClickListener { pickFile() }
+
+        startProgressUpdater()
     }
 
-    private fun formatTime(ms: Long): String {
-        val minutes = TimeUnit.MILLISECONDS.toMinutes(ms)
-        val seconds = TimeUnit.MILLISECONDS.toSeconds(ms) % 60
-        return String.format("%02d:%02d", minutes, seconds)
+    private fun pickFile() {
+        pickFileLauncher.launch("*/*")
     }
 
-    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
-        if (event.action == KeyEvent.ACTION_DOWN &&
-            event.keyCode == KeyEvent.KEYCODE_DPAD_CENTER
-        ) {
-            if (player.isPlaying) {
-                player.pause()
-                showOverlay()
-                return true
+    private fun playUri(uri: Uri) {
+        player.setMediaItem(MediaItem.fromUri(uri))
+        player.prepare()
+        player.play()
+        overlayLayout.visibility = View.GONE
+    }
+
+    private fun stopPlayer() {
+        player.pause()
+        player.seekTo(0)
+        overlayLayout.visibility = View.VISIBLE
+    }
+
+    private fun resumePlayer() {
+        player.play()
+        overlayLayout.visibility = View.GONE
+    }
+
+    private fun restartPlayer() {
+        player.seekTo(0)
+        player.play()
+        overlayLayout.visibility = View.GONE
+    }
+
+    private fun startProgressUpdater() {
+        updateProgressTask = object : Runnable {
+            override fun run() {
+                val duration = player.duration.coerceAtLeast(0)
+                val position = player.currentPosition.coerceAtLeast(0)
+                if (duration > 0) {
+                    val progress = (position * 100 / duration).toInt()
+                    progressBar.progress = progress
+                    timePlayed.text = formatMillis(position)
+                    timeRemaining.text = formatMillis(duration - position)
+                }
+                handler.postDelayed(this, 1000)
             }
         }
-        return super.dispatchKeyEvent(event)
+        handler.post(updateProgressTask!!)
     }
 
-    private fun saveLastVideo(uri: Uri) {
-        prefs.edit().putString("last_video_uri", uri.toString()).apply()
+    private fun formatMillis(ms: Long): String {
+        val minutes = TimeUnit.MILLISECONDS.toMinutes(ms)
+        val seconds = TimeUnit.MILLISECONDS.toSeconds(ms) % 60
+        return String.format("%d:%02d", minutes, seconds)
     }
 
-    private fun loadLastVideo(): Uri? {
-        return prefs.getString("last_video_uri", null)?.let { Uri.parse(it) }
-    }
-
-    override fun onStop() {
-        super.onStop()
-        currentUri?.let {
-            prefs.edit().putLong(it.toString(), player.currentPosition).apply()
+    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
+        if (keyCode == KeyEvent.KEYCODE_DPAD_CENTER) {
+            if (overlayLayout.visibility == View.VISIBLE) {
+                overlayLayout.visibility = View.GONE
+                player.play()
+            } else {
+                overlayLayout.visibility = View.VISIBLE
+                player.pause()
+            }
+            return true
         }
-        player.pause()
+        return super.onKeyDown(keyCode, event)
     }
 
     override fun onDestroy() {
-        player.release()
         super.onDestroy()
+        handler.removeCallbacks(updateProgressTask!!)
+        player.release()
+    }
+
+    private fun getFileName(uri: Uri): String {
+        var result: String? = null
+        contentResolver.query(uri, null, null, null, null)?.use { cursor ->
+            if (cursor.moveToFirst()) {
+                val idx = cursor.getColumnIndex("_display_name")
+                if (idx >= 0) result = cursor.getString(idx)
+            }
+        }
+        return result ?: uri.lastPathSegment ?: "Unknown"
     }
 }
