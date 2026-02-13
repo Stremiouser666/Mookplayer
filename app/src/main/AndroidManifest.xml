@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <!-- REQUIRED for streaming URLs -->
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <application
         android:allowBackup="true"
         android:label="Mookplayer"
@@ -22,6 +25,10 @@
 
                 <!-- Audio -->
                 <data android:mimeType="audio/*" />
+
+                <!-- URLs -->
+                <data android:scheme="http" />
+                <data android:scheme="https" />
             </intent-filter>
 
             <!-- Launcher -->
