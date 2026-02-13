@@ -6,11 +6,11 @@
     android:layout_height="match_parent"
     android:background="#000">
 
-    <com.google.android.exoplayer2.ui.PlayerView
+    <androidx.media3.ui.PlayerView
         android:id="@+id/playerView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:use_controller="false" />
+        app:useController="false" />
 
     <LinearLayout
         android:id="@+id/overlayLayout"
