@@ -1,92 +1,108 @@
 package com.mookplayer.com
 
+import android.content.Context
+import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
-import android.view.KeyEvent
+import android.widget.*
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.media3.common.MediaItem
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.PlayerView
-import android.widget.Button
-import android.widget.TextView
 
 class MainActivity : AppCompatActivity() {
 
     private lateinit var player: ExoPlayer
     private lateinit var playerView: PlayerView
 
-    private lateinit var btnPlayPause: Button
-    private lateinit var btnRewind: Button
-    private lateinit var btnForward: Button
-    private lateinit var videoTitle: TextView
+    private lateinit var filenameLabel: TextView
+    private lateinit var pausedLabel: TextView
+    private lateinit var progressBar: ProgressBar
+    private lateinit var timePlayed: TextView
+    private lateinit var timeRemaining: TextView
+
+    private var currentUri: Uri? = null
+
+    private val prefs by lazy {
+        getSharedPreferences("playback_positions", Context.MODE_PRIVATE)
+    }
+
+    private val filePicker =
+        registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+            uri?.let { playMedia(it) }
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        // View bindings
         playerView = findViewById(R.id.playerView)
-        btnPlayPause = findViewById(R.id.btnPlayPause)
-        btnRewind = findViewById(R.id.btnRewind)
-        btnForward = findViewById(R.id.btnForward)
-        videoTitle = findViewById(R.id.videoTitle)
+        filenameLabel = findViewById(R.id.filenameLabel)
+        pausedLabel = findViewById(R.id.pausedLabel)
+        progressBar = findViewById(R.id.progressBar)
+        timePlayed = findViewById(R.id.timePlayed)
+        timeRemaining = findViewById(R.id.timeRemaining)
 
-        // Initialize player
+        val btnResume: Button = findViewById(R.id.btnResume)
+        val btnStop: Button = findViewById(R.id.btnStop)
+        val btnRestart: Button = findViewById(R.id.btnRestart)
+        val selectFileButton: Button = findViewById(R.id.selectFileButton)
+
         player = ExoPlayer.Builder(this).build()
         playerView.player = player
 
-        // Example media (replace with your file picker later)
-        val mediaItem = MediaItem.fromUri(
-            Uri.parse("https://storage.googleapis.com/exoplayer-test-media-0/play.mp3")
-        )
+        btnResume.setOnClickListener { player.play() }
+        btnStop.setOnClickListener { player.pause() }
+        btnRestart.setOnClickListener { player.seekTo(0) }
+        selectFileButton.setOnClickListener { openFilePicker() }
 
+        handleIntent(intent)
+    }
+
+    private fun openFilePicker() {
+        filePicker.launch(arrayOf("*/*"))
+    }
+
+    private fun handleIntent(intent: Intent?) {
+        val uri = intent?.data ?: return
+        playMedia(uri)
+    }
+
+    private fun playMedia(uri: Uri) {
+        currentUri = uri
+        filenameLabel.text = uri.lastPathSegment ?: "Playing"
+
+        val mediaItem = MediaItem.fromUri(uri)
         player.setMediaItem(mediaItem)
+
+        val lastPosition = prefs.getLong(uri.toString(), 0L)
+        if (lastPosition > 0) {
+            player.seekTo(lastPosition)
+        }
+
         player.prepare()
-        player.playWhenReady = true
-
-        videoTitle.text = "Sample Media"
-
-        setupControls()
+        player.play()
     }
 
-    private fun setupControls() {
-
-        btnPlayPause.setOnClickListener {
-            player.playWhenReady = !player.playWhenReady
-            updatePlayPauseText()
-        }
-
-        btnRewind.setOnClickListener {
-            player.seekBack()
-        }
-
-        btnForward.setOnClickListener {
-            player.seekForward()
-        }
-
-        updatePlayPauseText()
-    }
-
-    private fun updatePlayPauseText() {
-        btnPlayPause.text = if (player.isPlaying) "⏸" else "▶"
-    }
-
-    // Handle TV remote play/pause button
-    override fun onKeyDown(keyCode: Int, event: KeyEvent?): Boolean {
-        when (keyCode) {
-            KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE,
-            KeyEvent.KEYCODE_DPAD_CENTER,
-            KeyEvent.KEYCODE_ENTER -> {
-                player.playWhenReady = !player.playWhenReady
-                updatePlayPauseText()
-                return true
-            }
-        }
-        return super.onKeyDown(keyCode, event)
+    override fun onPause() {
+        super.onPause()
+        savePosition()
     }
 
     override fun onStop() {
         super.onStop()
+        savePosition()
+    }
+
+    private fun savePosition() {
+        currentUri?.let {
+            prefs.edit().putLong(it.toString(), player.currentPosition).apply()
+        }
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
         player.release()
     }
 }
