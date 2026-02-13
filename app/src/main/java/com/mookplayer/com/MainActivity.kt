@@ -1,4 +1,4 @@
-package com.mookplayer
+package com.mookplayer.com
 
 import android.net.Uri
 import android.os.Bundle
