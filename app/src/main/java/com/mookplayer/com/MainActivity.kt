@@ -15,8 +15,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var player: ExoPlayer
     private lateinit var playerView: PlayerView
 
-    private lateinit var openFileButton: ImageButton
-    private lateinit var playPauseButton: ImageButton
+    private lateinit var btnRewind: ImageButton
+    private lateinit var btnPlayPause: ImageButton
+    private lateinit var btnForward: ImageButton
 
     private var currentUri: Uri? = null
 
@@ -28,29 +29,34 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        // Player view
         playerView = findViewById(R.id.playerView)
 
-        // Buttons (ImageButtons — fixes crash)
-        openFileButton = findViewById(R.id.openFileButton)
-        playPauseButton = findViewById(R.id.playPauseButton)
+        // Buttons from your layout
+        btnRewind = findViewById(R.id.btnRewind)
+        btnPlayPause = findViewById(R.id.btnPlayPause)
+        btnForward = findViewById(R.id.btnForward)
 
-        // Setup player
         player = ExoPlayer.Builder(this).build()
         playerView.player = player
 
-        // Button actions
-        openFileButton.setOnClickListener { openFilePicker() }
-
-        playPauseButton.setOnClickListener {
+        btnPlayPause.setOnClickListener {
             if (player.isPlaying) {
                 player.pause()
+                btnPlayPause.setImageResource(android.R.drawable.ic_media_play)
             } else {
                 player.play()
+                btnPlayPause.setImageResource(android.R.drawable.ic_media_pause)
             }
         }
 
-        // Handle "Open With"
+        btnRewind.setOnClickListener {
+            player.seekBack()
+        }
+
+        btnForward.setOnClickListener {
+            player.seekForward()
+        }
+
         handleIntent(intent)
     }
 
@@ -70,31 +76,12 @@ class MainActivity : AppCompatActivity() {
         val mediaItem = MediaItem.fromUri(uri)
         player.setMediaItem(mediaItem)
 
-        // Restore last position
         val lastPosition = prefs.getLong(uri.toString(), 0L)
-        if (lastPosition > 0) {
-            player.seekTo(lastPosition)
-        }
+        if (lastPosition > 0) player.seekTo(lastPosition)
 
         player.prepare()
         player.play()
-    }
-
-    private fun openFilePicker() {
-        val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
-            type = "video/*"
-            addCategory(Intent.CATEGORY_OPENABLE)
-        }
-        startActivityForResult(intent, 1001)
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == 1001 && resultCode == RESULT_OK) {
-            data?.data?.let { uri ->
-                loadMedia(uri)
-            }
-        }
+        btnPlayPause.setImageResource(android.R.drawable.ic_media_pause)
     }
 
     override fun onPause() {
