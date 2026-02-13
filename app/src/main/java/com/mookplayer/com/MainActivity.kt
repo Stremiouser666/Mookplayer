@@ -1,5 +1,6 @@
 package com.mookplayer.com
 
+import android.app.AlertDialog
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -21,7 +22,6 @@ class MainActivity : AppCompatActivity() {
     private lateinit var btnForward: ImageButton
 
     private var currentUri: Uri? = null
-    private var openWithMode = false
 
     private val prefs by lazy {
         getSharedPreferences("playback_positions", Context.MODE_PRIVATE)
@@ -31,40 +31,35 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        // Player view
         playerView = findViewById(R.id.playerView)
+
+        // Buttons
         openFileButton = findViewById(R.id.openFileButton)
         playPauseButton = findViewById(R.id.btnPlayPause)
         btnRewind = findViewById(R.id.btnRewind)
         btnForward = findViewById(R.id.btnForward)
 
+        // Setup player
         player = ExoPlayer.Builder(this).build()
         playerView.player = player
 
-        // ▶ Short press = play in Mookplayer
-        openFileButton.setOnClickListener {
-            openWithMode = false
-            openFilePicker()
-        }
-
-        // ▶ Long press = Open With chooser
-        openFileButton.setOnLongClickListener {
-            openWithMode = true
-            openFilePicker()
-            true
-        }
+        // Button actions
+        openFileButton.setOnClickListener { showSettingsPopup() }
 
         playPauseButton.setOnClickListener {
             if (player.isPlaying) player.pause() else player.play()
         }
 
         btnRewind.setOnClickListener {
-            player.seekTo((player.currentPosition - 10000).coerceAtLeast(0))
+            player.seekBack()
         }
 
         btnForward.setOnClickListener {
-            player.seekTo(player.currentPosition + 10000)
+            player.seekForward()
         }
 
+        // Handle "Open With"
         handleIntent(intent)
     }
 
@@ -84,6 +79,7 @@ class MainActivity : AppCompatActivity() {
         val mediaItem = MediaItem.fromUri(uri)
         player.setMediaItem(mediaItem)
 
+        // Restore last position
         val lastPosition = prefs.getLong(uri.toString(), 0L)
         if (lastPosition > 0) player.seekTo(lastPosition)
 
@@ -91,6 +87,22 @@ class MainActivity : AppCompatActivity() {
         player.play()
     }
 
+    // ✅ SETTINGS POPUP
+    private fun showSettingsPopup() {
+        val options = arrayOf("Open File", "Open With")
+
+        AlertDialog.Builder(this)
+            .setTitle("Settings")
+            .setItems(options) { _, which ->
+                when (which) {
+                    0 -> openFilePicker()
+                    1 -> openWith()
+                }
+            }
+            .show()
+    }
+
+    // ✅ OPEN FILE (your picker)
     private fun openFilePicker() {
         val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
             type = "video/*"
@@ -99,26 +111,22 @@ class MainActivity : AppCompatActivity() {
         startActivityForResult(intent, 1001)
     }
 
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-
-        if (requestCode == 1001 && resultCode == RESULT_OK) {
-            val uri = data?.data ?: return
-
-            if (openWithMode) {
-                openWithChooser(uri)
-            } else {
-                loadMedia(uri)
+    // ✅ OPEN WITH (system chooser)
+    private fun openWith() {
+        currentUri?.let { uri ->
+            val intent = Intent(Intent.ACTION_VIEW).apply {
+                setDataAndType(uri, "video/*")
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             }
+            startActivity(Intent.createChooser(intent, "Open With"))
         }
     }
 
-    private fun openWithChooser(uri: Uri) {
-        val intent = Intent(Intent.ACTION_VIEW).apply {
-            setDataAndType(uri, "video/*")
-            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == 1001 && resultCode == RESULT_OK) {
+            data?.data?.let { uri -> loadMedia(uri) }
         }
-        startActivity(Intent.createChooser(intent, "Open with"))
     }
 
     override fun onPause() {
@@ -132,8 +140,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun savePlaybackPosition() {
-        currentUri?.let {
-            prefs.edit().putLong(it.toString(), player.currentPosition).apply()
+        currentUri?.let { uri ->
+            prefs.edit()
+                .putLong(uri.toString(), player.currentPosition)
+                .apply()
         }
     }
 
