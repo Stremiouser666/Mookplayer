@@ -1,93 +1,114 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:background="#000"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="#000">
 
+    <!-- Video surface -->
     <androidx.media3.ui.PlayerView
         android:id="@+id/playerView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:use_controller="false"/>
+        app:use_controller="false" />
 
+    <!-- Bottom controls overlay -->
     <LinearLayout
-        android:id="@+id/overlayLayout"
+        android:id="@+id/controlOverlay"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
+        android:layout_gravity="bottom"
         android:orientation="vertical"
         android:padding="16dp"
         android:background="#66000000">
 
+        <!-- File title -->
         <TextView
             android:id="@+id/filenameLabel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
             android:text="No file loaded"
             android:textColor="#FFF"
-            android:textSize="16sp"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
+            android:textSize="18sp"
+            android:maxLines="1"
+            android:ellipsize="end" />
 
-        <TextView
-            android:id="@+id/pausedLabel"
-            android:text="Paused"
-            android:textColor="#FFF"
-            android:visibility="gone"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
-
+        <!-- Progress -->
         <ProgressBar
             android:id="@+id/progressBar"
             style="?android:attr/progressBarStyleHorizontal"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"/>
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp" />
 
-        <TextView
-            android:id="@+id/timePlayed"
-            android:text="00:00"
-            android:textColor="#FFF"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
-
-        <TextView
-            android:id="@+id/timeRemaining"
-            android:text="-00:00"
-            android:textColor="#FFF"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"/>
-
-        <Button
-            android:id="@+id/btnResume"
-            android:text="Resume"
+        <!-- Time row -->
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:focusable="true"
-            android:focusableInTouchMode="true"/>
+            android:orientation="horizontal"
+            android:layout_marginTop="4dp">
 
-        <Button
-            android:id="@+id/btnStop"
-            android:text="Stop"
+            <TextView
+                android:id="@+id/timePlayed"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="00:00"
+                android:textColor="#FFF" />
+
+            <Space
+                android:layout_width="0dp"
+                android:layout_height="1dp"
+                android:layout_weight="1" />
+
+            <TextView
+                android:id="@+id/timeRemaining"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="-00:00"
+                android:textColor="#FFF" />
+        </LinearLayout>
+
+        <!-- Horizontal button row -->
+        <LinearLayout
+            android:id="@+id/buttonRow"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:focusable="true"
-            android:focusableInTouchMode="true"/>
+            android:orientation="horizontal"
+            android:layout_marginTop="12dp">
 
-        <Button
-            android:id="@+id/btnRestart"
-            android:text="Restart"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:focusable="true"
-            android:focusableInTouchMode="true"/>
+            <Button
+                android:id="@+id/btnResume"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Resume"
+                android:focusable="true" />
 
-        <Button
-            android:id="@+id/selectFileButton"
-            android:text="Open File"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:focusable="true"
-            android:focusableInTouchMode="true"/>
+            <Button
+                android:id="@+id/btnStop"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Stop"
+                android:focusable="true" />
+
+            <Button
+                android:id="@+id/btnRestart"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Restart"
+                android:focusable="true" />
+
+            <Button
+                android:id="@+id/selectFileButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Open File"
+                android:focusable="true" />
+        </LinearLayout>
+
     </LinearLayout>
 
-</RelativeLayout>
+</FrameLayout>
