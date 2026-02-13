@@ -1,4 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Intentionally empty. Themes are defined in themes.xml -->
+
+    <!-- App Theme -->
+    <style name="Theme.Mookplayer" parent="Theme.MaterialComponents.DayNight.NoActionBar">
+        <item name="android:windowBackground">#000000</item>
+    </style>
+
+    <!-- Glow Button Style -->
+    <style name="GlowButton">
+        <item name="android:background">@drawable/glow_button_background</item>
+        <item name="android:textColor">#FFFFFF</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:padding">12dp</item>
+        <item name="android:layout_marginTop">8dp</item>
+    </style>
+
 </resources>
