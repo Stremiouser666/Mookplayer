@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.text.InputType
 import android.widget.EditText
 import android.widget.ImageButton
 import androidx.appcompat.app.AppCompatActivity
@@ -18,19 +19,14 @@ class MainActivity : AppCompatActivity() {
     private lateinit var playerView: PlayerView
 
     private lateinit var openFileButton: ImageButton
-    private lateinit var openUrlButton: ImageButton
     private lateinit var playPauseButton: ImageButton
-    private lateinit var rewindButton: ImageButton
-    private lateinit var forwardButton: ImageButton
+    private lateinit var btnRewind: ImageButton
+    private lateinit var btnForward: ImageButton
 
     private var currentUri: Uri? = null
 
     private val prefs by lazy {
         getSharedPreferences("playback_positions", Context.MODE_PRIVATE)
-    }
-
-    companion object {
-        private const val REQUEST_OPEN_FILE = 1001
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -42,30 +38,23 @@ class MainActivity : AppCompatActivity() {
 
         // Buttons
         openFileButton = findViewById(R.id.openFileButton)
-        openUrlButton = findViewById(R.id.openUrlButton)
         playPauseButton = findViewById(R.id.btnPlayPause)
-        rewindButton = findViewById(R.id.btnRewind)
-        forwardButton = findViewById(R.id.btnForward)
+        btnRewind = findViewById(R.id.btnRewind)
+        btnForward = findViewById(R.id.btnForward)
 
         // Setup player
         player = ExoPlayer.Builder(this).build()
         playerView.player = player
 
         // Button actions
-        openFileButton.setOnClickListener { openFilePicker() }
-        openUrlButton.setOnClickListener { showUrlDialog() }
+        openFileButton.setOnClickListener { showSettingsPopup() }
 
         playPauseButton.setOnClickListener {
             if (player.isPlaying) player.pause() else player.play()
         }
 
-        rewindButton.setOnClickListener {
-            player.seekBack()
-        }
-
-        forwardButton.setOnClickListener {
-            player.seekForward()
-        }
+        btnRewind.setOnClickListener { player.seekBack() }
+        btnForward.setOnClickListener { player.seekForward() }
 
         // Handle "Open With"
         handleIntent(intent)
@@ -89,25 +78,41 @@ class MainActivity : AppCompatActivity() {
 
         // Restore last position
         val lastPosition = prefs.getLong(uri.toString(), 0L)
-        if (lastPosition > 0) {
-            player.seekTo(lastPosition)
-        }
+        if (lastPosition > 0) player.seekTo(lastPosition)
 
         player.prepare()
         player.play()
     }
 
+    // ✅ SETTINGS POPUP
+    private fun showSettingsPopup() {
+        val options = arrayOf("Open File", "Open URL")
+
+        AlertDialog.Builder(this)
+            .setTitle("Settings")
+            .setItems(options) { _, which ->
+                when (which) {
+                    0 -> openFilePicker()
+                    1 -> showUrlInputDialog()
+                }
+            }
+            .show()
+    }
+
+    // ✅ OPEN FILE
     private fun openFilePicker() {
         val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
             type = "video/*"
             addCategory(Intent.CATEGORY_OPENABLE)
         }
-        startActivityForResult(intent, REQUEST_OPEN_FILE)
+        startActivityForResult(intent, 1001)
     }
 
-    private fun showUrlDialog() {
+    // ✅ OPEN URL
+    private fun showUrlInputDialog() {
         val input = EditText(this)
-        input.hint = "Enter video URL"
+        input.hint = "https://example.com/video.mp4"
+        input.inputType = InputType.TYPE_TEXT_VARIATION_URI
 
         AlertDialog.Builder(this)
             .setTitle("Open URL")
@@ -124,14 +129,8 @@ class MainActivity : AppCompatActivity() {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        if (requestCode == REQUEST_OPEN_FILE && resultCode == RESULT_OK) {
-            data?.data?.let { uri ->
-                contentResolver.takePersistableUriPermission(
-                    uri,
-                    Intent.FLAG_GRANT_READ_URI_PERMISSION
-                )
-                loadMedia(uri)
-            }
+        if (requestCode == 1001 && resultCode == RESULT_OK) {
+            data?.data?.let { uri -> loadMedia(uri) }
         }
     }
 
