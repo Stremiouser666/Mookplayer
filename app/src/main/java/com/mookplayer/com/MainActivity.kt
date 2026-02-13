@@ -1,10 +1,9 @@
-package com.mookplayer.com
+package com.mookplayer
 
-import android.content.Context
-import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.widget.ImageButton
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.media3.common.MediaItem
 import androidx.media3.exoplayer.ExoPlayer
@@ -15,91 +14,58 @@ class MainActivity : AppCompatActivity() {
     private lateinit var player: ExoPlayer
     private lateinit var playerView: PlayerView
 
-    private lateinit var btnRewind: ImageButton
-    private lateinit var btnPlayPause: ImageButton
-    private lateinit var btnForward: ImageButton
-
-    private var currentUri: Uri? = null
-
-    private val prefs by lazy {
-        getSharedPreferences("playback_positions", Context.MODE_PRIVATE)
-    }
+    // File picker
+    private val openFileLauncher =
+        registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
+            uri?.let { playVideo(it) }
+        }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
         playerView = findViewById(R.id.playerView)
+        val openFileButton: ImageButton = findViewById(R.id.openFileButton)
+        val playPause: ImageButton = findViewById(R.id.btnPlayPause)
+        val rewind: ImageButton = findViewById(R.id.btnRewind)
+        val forward: ImageButton = findViewById(R.id.btnForward)
 
-        // Buttons from your layout
-        btnRewind = findViewById(R.id.btnRewind)
-        btnPlayPause = findViewById(R.id.btnPlayPause)
-        btnForward = findViewById(R.id.btnForward)
-
+        // Setup player
         player = ExoPlayer.Builder(this).build()
         playerView.player = player
 
-        btnPlayPause.setOnClickListener {
-            if (player.isPlaying) {
-                player.pause()
-                btnPlayPause.setImageResource(android.R.drawable.ic_media_play)
-            } else {
-                player.play()
-                btnPlayPause.setImageResource(android.R.drawable.ic_media_pause)
-            }
+        // 🔹 OPEN FILE BUTTON
+        openFileButton.setOnClickListener {
+            openFileLauncher.launch("video/*")
         }
 
-        btnRewind.setOnClickListener {
-            player.seekBack()
+        // 🔹 PLAY / PAUSE
+        playPause.setOnClickListener {
+            player.playWhenReady = !player.playWhenReady
+            playPause.setImageResource(
+                if (player.playWhenReady)
+                    android.R.drawable.ic_media_pause
+                else
+                    android.R.drawable.ic_media_play
+            )
         }
 
-        btnForward.setOnClickListener {
-            player.seekForward()
+        // 🔹 REWIND 10s
+        rewind.setOnClickListener {
+            player.seekTo((player.currentPosition - 10_000).coerceAtLeast(0))
         }
 
-        handleIntent(intent)
+        // 🔹 FORWARD 10s
+        forward.setOnClickListener {
+            player.seekTo(player.currentPosition + 10_000)
+        }
     }
 
-    override fun onNewIntent(intent: Intent) {
-        super.onNewIntent(intent)
-        handleIntent(intent)
-    }
-
-    private fun handleIntent(intent: Intent?) {
-        val uri = intent?.data ?: return
-        loadMedia(uri)
-    }
-
-    private fun loadMedia(uri: Uri) {
-        currentUri = uri
-
+    private fun playVideo(uri: Uri) {
         val mediaItem = MediaItem.fromUri(uri)
         player.setMediaItem(mediaItem)
-
-        val lastPosition = prefs.getLong(uri.toString(), 0L)
-        if (lastPosition > 0) player.seekTo(lastPosition)
-
         player.prepare()
-        player.play()
-        btnPlayPause.setImageResource(android.R.drawable.ic_media_pause)
-    }
-
-    override fun onPause() {
-        super.onPause()
-        savePlaybackPosition()
-    }
-
-    override fun onStop() {
-        super.onStop()
-        savePlaybackPosition()
-    }
-
-    private fun savePlaybackPosition() {
-        currentUri?.let { uri ->
-            prefs.edit()
-                .putLong(uri.toString(), player.currentPosition)
-                .apply()
-        }
+        player.playWhenReady = true
     }
 
     override fun onDestroy() {
