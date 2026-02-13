@@ -1,99 +1,79 @@
 <?xml version="1.0" encoding="utf-8"?>
-<RelativeLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#000">
+    android:background="#000000">
 
+    <!-- Video Player -->
     <androidx.media3.ui.PlayerView
         android:id="@+id/playerView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:useController="false" />
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        app:resize_mode="fit"
+        app:show_buffering="when_playing" />
 
+    <!-- Top Title Bar -->
     <LinearLayout
-        android:id="@+id/overlayLayout"
+        android:id="@+id/titleBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:layout_alignParentBottom="true"
+        android:orientation="horizontal"
         android:padding="16dp"
+        android:background="#66000000"
+        android:layout_gravity="top">
+
+        <TextView
+            android:id="@+id/videoTitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Now Playing"
+            android:textColor="#FFFFFF"
+            android:textSize="18sp"
+            android:maxLines="1"
+            android:ellipsize="end" />
+    </LinearLayout>
+
+    <!-- Bottom Controls Overlay (TV Friendly) -->
+    <LinearLayout
+        android:id="@+id/controlBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:padding="24dp"
         android:background="#66000000">
 
-        <TextView
-            android:id="@+id/filenameLabel"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="No file loaded"
-            android:textColor="#FFF"
-            android:textSize="16sp"/>
-
-        <TextView
-            android:id="@+id/pausedLabel"
+        <Button
+            android:id="@+id/btnRewind"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Paused"
-            android:textColor="#FFF"
-            android:visibility="gone"/>
+            android:text="⏪"
+            android:focusable="true"
+            android:nextFocusRight="@id/btnPlayPause" />
 
-        <ProgressBar
-            android:id="@+id/progressBar"
-            style="?android:attr/progressBarStyleHorizontal"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:progress="0"/>
-
-        <TextView
-            android:id="@+id/timePlayed"
+        <Button
+            android:id="@+id/btnPlayPause"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="00:00"
-            android:textColor="#FFF"/>
+            android:text="⏯"
+            android:layout_marginHorizontal="32dp"
+            android:focusable="true"
+            android:nextFocusLeft="@id/btnRewind"
+            android:nextFocusRight="@id/btnForward" />
 
-        <TextView
-            android:id="@+id/timeRemaining"
+        <Button
+            android:id="@+id/btnForward"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="-00:00"
-            android:textColor="#FFF"/>
-
-        <Button
-            android:id="@+id/btnResume"
-            style="@style/GlowButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Resume"
+            android:text="⏩"
             android:focusable="true"
-            android:focusableInTouchMode="true"/>
-
-        <Button
-            android:id="@+id/btnStop"
-            style="@style/GlowButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Stop"
-            android:focusable="true"
-            android:focusableInTouchMode="true"/>
-
-        <Button
-            android:id="@+id/btnRestart"
-            style="@style/GlowButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Restart"
-            android:focusable="true"
-            android:focusableInTouchMode="true"/>
-
-        <Button
-            android:id="@+id/selectFileButton"
-            style="@style/GlowButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Open File"
-            android:focusable="true"
-            android:focusableInTouchMode="true"/>
+            android:nextFocusLeft="@id/btnPlayPause" />
 
     </LinearLayout>
 
-</RelativeLayout>
+</FrameLayout>
