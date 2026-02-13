@@ -5,6 +5,8 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
+import android.text.InputType
+import android.widget.EditText
 import android.widget.ImageButton
 import androidx.appcompat.app.AppCompatActivity
 import androidx.media3.common.MediaItem
@@ -51,13 +53,8 @@ class MainActivity : AppCompatActivity() {
             if (player.isPlaying) player.pause() else player.play()
         }
 
-        btnRewind.setOnClickListener {
-            player.seekBack()
-        }
-
-        btnForward.setOnClickListener {
-            player.seekForward()
-        }
+        btnRewind.setOnClickListener { player.seekBack() }
+        btnForward.setOnClickListener { player.seekForward() }
 
         // Handle "Open With"
         handleIntent(intent)
@@ -89,20 +86,20 @@ class MainActivity : AppCompatActivity() {
 
     // ✅ SETTINGS POPUP
     private fun showSettingsPopup() {
-        val options = arrayOf("Open File", "Open With")
+        val options = arrayOf("Open File", "Open URL")
 
         AlertDialog.Builder(this)
             .setTitle("Settings")
             .setItems(options) { _, which ->
                 when (which) {
                     0 -> openFilePicker()
-                    1 -> openWith()
+                    1 -> showUrlInputDialog()
                 }
             }
             .show()
     }
 
-    // ✅ OPEN FILE (your picker)
+    // ✅ OPEN FILE
     private fun openFilePicker() {
         val intent = Intent(Intent.ACTION_OPEN_DOCUMENT).apply {
             type = "video/*"
@@ -111,15 +108,23 @@ class MainActivity : AppCompatActivity() {
         startActivityForResult(intent, 1001)
     }
 
-    // ✅ OPEN WITH (system chooser)
-    private fun openWith() {
-        currentUri?.let { uri ->
-            val intent = Intent(Intent.ACTION_VIEW).apply {
-                setDataAndType(uri, "video/*")
-                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+    // ✅ OPEN URL
+    private fun showUrlInputDialog() {
+        val input = EditText(this)
+        input.hint = "https://example.com/video.mp4"
+        input.inputType = InputType.TYPE_TEXT_VARIATION_URI
+
+        AlertDialog.Builder(this)
+            .setTitle("Open URL")
+            .setView(input)
+            .setPositiveButton("Play") { _, _ ->
+                val url = input.text.toString().trim()
+                if (url.isNotEmpty()) {
+                    loadMedia(Uri.parse(url))
+                }
             }
-            startActivity(Intent.createChooser(intent, "Open With"))
-        }
+            .setNegativeButton("Cancel", null)
+            .show()
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
