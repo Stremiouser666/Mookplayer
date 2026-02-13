@@ -7,13 +7,11 @@
     android:layout_height="match_parent"
     android:background="@android:color/black">
 
-    <!-- Video surface -->
     <androidx.media3.ui.PlayerView
         android:id="@+id/playerView"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:keepScreenOn="true"
-        app:use_controller="true"
         app:resize_mode="fit"
         app:show_buffering="when_playing"
         app:layout_constraintTop_toTopOf="parent"
@@ -21,7 +19,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- Bottom control bar (TV friendly) -->
+    <!-- Bottom control bar -->
     <LinearLayout
         android:id="@+id/controlBar"
         android:layout_width="0dp"
@@ -34,16 +32,25 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
+        <!-- Open File -->
+        <ImageButton
+            android:id="@+id/btnOpenFile"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@android:drawable/ic_menu_upload"
+            android:tint="@android:color/white"
+            android:contentDescription="Open File" />
+
         <ImageButton
             android:id="@+id/btnRewind"
             android:layout_width="48dp"
             android:layout_height="48dp"
+            android:layout_marginStart="8dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@android:drawable/ic_media_rew"
             android:tint="@android:color/white"
-            android:contentDescription="Rewind"
-            android:focusable="true"
-            android:focusableInTouchMode="true" />
+            android:contentDescription="Rewind" />
 
         <ImageButton
             android:id="@+id/btnPlayPause"
@@ -54,20 +61,17 @@
             android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@android:drawable/ic_media_pause"
             android:tint="@android:color/white"
-            android:contentDescription="Play/Pause"
-            android:focusable="true"
-            android:focusableInTouchMode="true" />
+            android:contentDescription="Play/Pause" />
 
         <ImageButton
             android:id="@+id/btnForward"
             android:layout_width="48dp"
             android:layout_height="48dp"
+            android:layout_marginEnd="8dp"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@android:drawable/ic_media_ff"
             android:tint="@android:color/white"
-            android:contentDescription="Forward"
-            android:focusable="true"
-            android:focusableInTouchMode="true" />
+            android:contentDescription="Forward" />
 
     </LinearLayout>
 
